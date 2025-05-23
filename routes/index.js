@@ -2,36 +2,89 @@ const express = require('express');
 const router = express.Router();
 const apiController = require('../controllers/apiController');
 
-// 4 rotas simples:
 /**
  * @swagger
- * /:
+ * /notifications:
  *   get:
- *     summary: Rota inicial da API
- *     responses:
- *       200:
- *         description: Retorna uma mensagem de boas-vindas
+ *     summary: Lista notificações com filtros (período, cedente, conta, convênio, IDs de integração, status)
+ *     tags:
+ *       - Notificações
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Data inicial do período (máx. 24h)
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Data final do período (máx. 24h)
+ *       - in: query
+ *         name: cnpj
+ *         schema:
+ *           type: string
+ *         description: CNPJ do cedente
+ *       - in: query
+ *         name: account
+ *         schema:
+ *           type: string
+ *         description: Conta vinculada à notificação
+ *       - in: query
+ *         name: agreement
+ *         schema:
+ *           type: string
+ *         description: Convênio bancário
+ *       - in: query
+ *         name: integrationIds
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Lista de IDs de integração
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Situações das notificações
  */
-router.get('/', (req, res) => {
-    res.status(200).send('Bem-vindo à API!');
-  });
-  
-/**
- * @swagger
- * /ping:
- *   get:
- *     summary: Verifica se a API está funcionando
- *     responses:
- *       200:
- *         description: Retorna "pong"
- */
-router.get('/items', apiController.getItems);
+router.get('/notifications', apiController.listNotifications);
 
 /**
  * @swagger
- * /items:
+ * /notifications/{notificationId}:
+ *   get:
+ *     summary: Recupera detalhes de uma notificação específica
+ *     tags:
+ *       - Notificações
+ *     parameters:
+ *       - in: path
+ *         name: notificationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID da notificação
+ */
+router.get('/notifications/:notificationId', apiController.getNotificationById);
+
+/**
+ * @swagger
+ * /notifications/{notificationId}/reprocess:
  *   post:
- *     summary: Cria um novo item
+ *     summary: Reprocessa uma notificação por ID (webhook, agendado, evento)
+ *     tags:
+ *       - Notificações
+ *     parameters:
+ *       - in: path
+ *         name: notificationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID da notificação
  *     requestBody:
  *       required: true
  *       content:
@@ -39,51 +92,151 @@ router.get('/items', apiController.getItems);
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               type:
  *                 type: string
- *     responses:
- *       201:
- *         description: Item criado com sucesso
+ *                 enum: [webhook, scheduled, event]
+ *               scheduleAt:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Data/hora para envio agendado
  */
+router.post('/notifications/:notificationId/reprocess', apiController.reprocessNotification);
 
 /**
  * @swagger
- * /items/{id}:
- *   delete:
- *     summary: Deleta um item pelo ID
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: ID do item a ser deletado
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Item deletado com sucesso
- *       404:
- *         description: Item não encontrado
+ * /notifications/reprocess/batch:
+ *   post:
+ *     summary: Reprocessa em lote (até 50 notificações)
+ *     tags:
+ *       - Notificações
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notificationIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               type:
+ *                 type: string
+ *                 enum: [webhook, scheduled, event]
+ *               scheduleAt:
+ *                 type: string
+ *                 format: date-time
  */
-router.post('/items', apiController.createItem);
+router.post('/notifications/reprocess/batch', apiController.reprocessBatch);
 
 /**
  * @swagger
- * /items/{id}:
- *   delete:
- *     summary: Deleta um item pelo ID
+ * /protocols:
+ *   get:
+ *     summary: Lista protocolos com filtros (cliente, tipo, status, período)
+ *     tags:
+ *       - Protocolos
+ */
+router.get('/protocols', apiController.listProtocols);
+
+/**
+ * @swagger
+ * /protocols/{protocolId}:
+ *   get:
+ *     summary: Consulta o status de um protocolo específico
+ *     tags:
+ *       - Protocolos
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: protocolId
  *         required: true
- *         description: ID do item a ser deletado
  *         schema:
- *           type: integer
+ *           type: string
+ *         description: UUID do protocolo
+ */
+router.get('/protocols/:protocolId', apiController.getProtocolById);
+
+/**
+ * @swagger
+ * /protocols:
+ *   post:
+ *     summary: Cria manualmente um protocolo genérico
+ *     tags:
+ *       - Protocolos
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               clientCnpj:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [webhook, scheduled, event]
+ */
+router.post('/protocols', apiController.createProtocol);
+
+/**
+ * @swagger
+ * /batches:
+ *   post:
+ *     summary: Cria um pacote de até 50 notificações para processamento em lote
+ *     tags:
+ *       - Lotes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notificationIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ */
+router.post('/batches', apiController.createBatch);
+
+/**
+ * @swagger
+ * /batches/{batchId}:
+ *   get:
+ *     summary: Consulta status e detalhes de um lote específico
+ *     tags:
+ *       - Lotes
+ *     parameters:
+ *       - in: path
+ *         name: batchId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID do lote
+ */
+router.get('/batches/:batchId', apiController.getBatchById);
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health-check simples da API
+ *     tags:
+ *       - Utilidades
  *     responses:
  *       200:
- *         description: Item deletado com sucesso
- *       404:
- *         description: Item não encontrado
+ *         description: API está rodando
  */
-router.delete('/items/:id', apiController.deleteItem);
+router.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
+/**
+ * @swagger
+ * /metrics:
+ *   get:
+ *     summary: Exposição de métricas para Prometheus
+ *     tags:
+ *       - Utilidades
+ */
+router.get('/metrics', apiController.getMetrics);
 
 module.exports = router;
