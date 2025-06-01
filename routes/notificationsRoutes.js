@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const apiController = require('../controllers/apiController');
+const apiController = require('../controllers/notificationsController');
+
 
 /**
  * @swagger
@@ -128,115 +129,5 @@ router.post('/notifications/:notificationId/reprocess', apiController.reprocessN
  *                 format: date-time
  */
 router.post('/notifications/reprocess/batch', apiController.reprocessBatch);
-
-/**
- * @swagger
- * /protocols:
- *   get:
- *     summary: Lista protocolos com filtros (cliente, tipo, status, período)
- *     tags:
- *       - Protocolos
- */
-router.get('/protocols', apiController.listProtocols);
-
-/**
- * @swagger
- * /protocols/{protocolId}:
- *   get:
- *     summary: Consulta o status de um protocolo específico
- *     tags:
- *       - Protocolos
- *     parameters:
- *       - in: path
- *         name: protocolId
- *         required: true
- *         schema:
- *           type: string
- *         description: UUID do protocolo
- */
-router.get('/protocols/:protocolId', apiController.getProtocolById);
-
-/**
- * @swagger
- * /protocols:
- *   post:
- *     summary: Cria manualmente um protocolo genérico
- *     tags:
- *       - Protocolos
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               clientCnpj:
- *                 type: string
- *               type:
- *                 type: string
- *                 enum: [webhook, scheduled, event]
- */
-router.post('/protocols', apiController.createProtocol);
-
-/**
- * @swagger
- * /batches:
- *   post:
- *     summary: Cria um pacote de até 50 notificações para processamento em lote
- *     tags:
- *       - Lotes
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               notificationIds:
- *                 type: array
- *                 items:
- *                   type: string
- */
-router.post('/batches', apiController.createBatch);
-
-/**
- * @swagger
- * /batches/{batchId}:
- *   get:
- *     summary: Consulta status e detalhes de um lote específico
- *     tags:
- *       - Lotes
- *     parameters:
- *       - in: path
- *         name: batchId
- *         required: true
- *         schema:
- *           type: string
- *         description: UUID do lote
- */
-router.get('/batches/:batchId', apiController.getBatchById);
-
-/**
- * @swagger
- * /health:
- *   get:
- *     summary: Health-check simples da API
- *     tags:
- *       - Utilidades
- *     responses:
- *       200:
- *         description: API está rodando
- */
-router.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
-
-/**
- * @swagger
- * /metrics:
- *   get:
- *     summary: Exposição de métricas para Prometheus
- *     tags:
- *       - Utilidades
- */
-router.get('/metrics', apiController.getMetrics);
 
 module.exports = router;

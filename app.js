@@ -1,13 +1,17 @@
-// app.js
 const express = require('express');
-const routes = require('./routes');                // nosso arquivo de rotas
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Importa rotas separadas
+const notificationsRoutes = require('./routes/notificationsRoutes');
+const batchesRoutes = require('./routes/batchesRoutes');
+const protocolsRoutes = require('./routes/protocolsRoutes');
+const utilitiesRoutes = require('./routes/utilitiesRoutes');
 
-// === CONFIGURAÇÃO DO SWAGGER ===
+const app = express();
+const port = process.env.port || 3000;
+
+// Configuração do Swagger
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -18,32 +22,34 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${PORT}/api/v1`,
-        description: 'Servidor local (desenvolvimento)'
-      }
-    ]
+        url: `http://localhost:${port}/api/v1`,
+        description: 'Servidor local (desenvolvimento)',
+      },
+    ],
   },
-  apis: ['./routes/index.js']   // ou './routes/**/*.js' se você migrar pra várias pastas
+  apis: ['./routes/*.js'], // procura anotações Swagger nas rotas
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-// ===============================
 
+// Middlewares
 app.use(express.json());
-
-// 1) Monta o Swagger UI em /api-docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// 2) Monta todas as rotas da versão 1 em /api/v1
-app.use('/api/v1', routes);
+// Aponta as rotas para o prefixo /api/v1
+app.use('/api/v1', notificationsRoutes);
+app.use('/api/v1', batchesRoutes);
+app.use('/api/v1', protocolsRoutes);
+app.use('/api/v1', utilitiesRoutes);
 
-// 3) Handler de erros genérico (opcional)
+// Middleware de erro genérico
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-  console.log(`📖 Swagger UI disponível em http://localhost:${PORT}/api-docs`);
+// Inicia o servidor
+app.listen(port, () => {
+  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+  console.log(`📖 Swagger em http://localhost:${port}/api-docs`);
 });
