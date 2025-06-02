@@ -9,9 +9,9 @@ const protocolsRoutes = require('./routes/protocolsRoutes');
 const utilitiesRoutes = require('./routes/utilitiesRoutes');
 
 const app = express();
-const port = process.env.port || 3000;
 
 // Configuração do Swagger
+const port = process.env.PORT || 3000;
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -33,10 +33,11 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
 // Middlewares
+require('dotenv').config();
 app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Aponta as rotas para o prefixo /api/v1
+// Rotas
 app.use('/api/v1', notificationsRoutes);
 app.use('/api/v1', batchesRoutes);
 app.use('/api/v1', protocolsRoutes);
@@ -48,8 +49,4 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message });
 });
 
-// Inicia o servidor
-app.listen(port, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
-  console.log(`📖 Swagger em http://localhost:${port}/api-docs`);
-});
+module.exports = app;
