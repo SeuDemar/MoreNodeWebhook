@@ -1,4 +1,4 @@
-const { connectRabbitMQ } = require('./services/rabbitmq');
+const { connectRabbitMQ } = require('./services/rabbitmqService');
 
 async function startWorker() {
   const channel = await connectRabbitMQ();
@@ -8,8 +8,6 @@ async function startWorker() {
       const notification = JSON.parse(msg.content.toString());
       console.log('Processando notificação:', notification);
 
-      // Aqui você coloca a lógica do que fazer com a notificação
-      // Depois de processar:
       channel.ack(msg);
     }
   }, { noAck: false });

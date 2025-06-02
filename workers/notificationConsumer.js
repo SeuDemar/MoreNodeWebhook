@@ -13,17 +13,15 @@ async function startNotificationConsumer() {
       const message = JSON.parse(msg.content.toString());
       console.log('📩 Mensagem recebida da fila:', message);
 
-      // Aqui você processa a notificação — por enquanto só simula
       try {
-        // Exemplo de "processamento"
         console.log(`🔧 Processando notificação ${message.data.notificationId}...`);
-        await new Promise(res => setTimeout(res, 2000)); // simula atraso
+        await new Promise(res => setTimeout(res, 2000)); 
 
         console.log(`✅ Notificação ${message.data.notificationId} processada com sucesso.`);
         channel.ack(msg);
       } catch (err) {
         console.error('❌ Erro ao processar notificação:', err);
-        channel.nack(msg); // pode reenfileirar dependendo da config
+        channel.nack(msg); 
       }
     }
   });

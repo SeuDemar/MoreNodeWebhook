@@ -1,4 +1,7 @@
-// Batches
+const { v4: uuidv4 } = require('uuid');
+
+const batches = []; 
+
 exports.createBatch = async (notificationIds) => {
   if (notificationIds.length > 50) {
     throw new Error('Máximo de 50 notificações por batch');

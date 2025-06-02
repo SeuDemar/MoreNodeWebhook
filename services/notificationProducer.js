@@ -1,4 +1,4 @@
-const { connectRabbitMQ } = require('./rabbitmq');
+const { connectRabbitMQ } = require('./rabbitmqService');
 
 async function enqueueNotification(notification) {
   const channel = await connectRabbitMQ();

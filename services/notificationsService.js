@@ -1,22 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
-const { enqueueNotification } = require('./messageQueue');
+const { enqueueNotification } = require('./notificationProducer');
 
-const notifications = []; 
-const protocols = [];    
-const batches = [];       
+const notifications = [
+  { id: '1', message: 'Teste notificação 1', createdAt: new Date() },
+  { id: '2', message: 'Teste notificação 2', createdAt: new Date() },
+];
 
-// Listar notificações (com possibilidade de filtros, se quiser depois)
+const protocols = [
+  { id: 'p1', notificationId: '1', status: 'pending', createdAt: new Date() },
+];
+
+const batches = [
+  { id: 'b1', notificationIds: ['1', '2'], status: 'pending', createdAt: new Date() },
+];
+
 exports.listNotifications = async (filters) => {
-  // Aqui você pode aplicar filtros em `notifications` usando o objeto filters, se desejar
+
   return notifications;
 };
 
-// Buscar notificação pelo ID
 exports.getNotificationById = async (notificationId) => {
   return notifications.find(n => n.id === notificationId) || null;
 };
 
-// Reprocessar uma notificação (criar protocolo)
 exports.reprocessNotification = async (notificationId, { type, scheduleAt }) => {
   const protocol = {
     id: uuidv4(),
@@ -29,13 +35,11 @@ exports.reprocessNotification = async (notificationId, { type, scheduleAt }) => 
 
   protocols.push(protocol);
 
-  // Enfileirar para processamento async via RabbitMQ
   await enqueueNotification(protocol);
 
   return protocol;
 };
 
-// Reprocessar batch (lote) de notificações
 exports.reprocessBatch = async (notificationIds, { type, scheduleAt }) => {
   if (notificationIds.length > 50) {
     throw new Error('Máximo de 50 notificações por batch');

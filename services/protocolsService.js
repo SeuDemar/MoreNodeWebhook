@@ -1,4 +1,4 @@
-// Protocolos
+
 exports.listProtocols = async (filters) => {
   return protocols;
 };

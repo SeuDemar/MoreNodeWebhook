@@ -4,12 +4,11 @@ let connection;
 let channel;
 
 async function connectRabbitMQ() {
-  if (connection) return channel; // reuse conexão se já existe
+  if (connection) return channel;
 
-  connection = await amqplib.connect('amqp://localhost'); // ajuste a URL conforme seu RabbitMQ
+  connection = await amqplib.connect('amqp://localhost'); 
   channel = await connection.createChannel();
 
-  // garante que a fila existe antes de usar
   await channel.assertQueue('notificationsQueue', { durable: true });
 
   return channel;
